@@ -1,32 +1,80 @@
-import { useEffect, useRef } from "react";
+import {
+  DependencyList,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-export type RoutineFunction = (stop: () => void, dtime: number, now: number) => void;
+export type RoutineFunction = (
+  stop: () => void,
+  dtime: number,
+  now: number,
+) => void;
 
-export function useRoutine(fn: RoutineFunction, delayMs: number) {
-    const lastAdd = useRef<number>(Date.now());
+export const RoutineStoppedError = {
+  message: "Routine was stopped",
+};
 
-    useEffect(() => {
-        let intervalId: any;
+export function useRoutine(
+  fn: RoutineFunction,
+  delayMs: number,
+  deps: DependencyList = [],
+) {
+  const timeLastRun = useRef<number>(Date.now());
 
-        const timeoutId = setTimeout(
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const _fn = useCallback(fn, deps);
+
+  useEffect(() => {
+    let intervalId: any;
+
+    const timeoutId = setTimeout(
+      () => {
+        const now = Date.now();
+        const dtime = now - timeLastRun.current;
+
+        timeLastRun.current = now;
+
+        try {
+          _fn(
             () => {
-                const now = Date.now();
-                const dtime = now - lastAdd.current;
-                lastAdd.current = now;
-                fn(() => clearTimeout(timeoutId), dtime, now);
-                intervalId = setInterval(() => {
-                    const now = Date.now();
-                    const dtime = now - lastAdd.current;
-                    lastAdd.current = now;
-                    fn(() => clearInterval(intervalId), dtime, now);
-                }, delayMs);
+              clearTimeout(timeoutId);
+              throw RoutineStoppedError;
             },
-            delayMs - (Date.now() - lastAdd.current),
-        );
+            dtime,
+            now,
+          );
 
-        return () => {
-            clearTimeout(timeoutId);
-            clearInterval(intervalId);
-        };
-    }, [delayMs, fn]);
+          intervalId = setInterval(() => {
+            const now = Date.now();
+            const dtime = now - timeLastRun.current;
+
+            timeLastRun.current = now;
+
+            try {
+              _fn(
+                () => {
+                  clearInterval(intervalId);
+                  throw RoutineStoppedError;
+                },
+                dtime,
+                now,
+              );
+            } catch (err) {
+              if (err !== RoutineStoppedError) throw err;
+            }
+          }, delayMs);
+        } catch (err) {
+          if (err !== RoutineStoppedError) throw err;
+        }
+      },
+      delayMs - (Date.now() - timeLastRun.current),
+    );
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
+  }, [delayMs, _fn]);
 }
