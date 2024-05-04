@@ -307,8 +307,8 @@ export default function Game() {
                 <div className="text-base leading-none font-bold">
                   {numeral(state.fuelLiters).format(`0.0`)} L
                 </div>
-                <div className="pt-1 text-xs leading-none text-gray-300">
-                  {numeral(state.fuelPricePerLiter).format(`0.000`)} EUR / L
+                <div className="pt-1 text-xs leading-none text-gray-300 flex items-center gap-1">
+                  € {numeral(state.fuelPricePerLiter).format(`0.000`)} / L
                 </div>
               </div>
             </button>

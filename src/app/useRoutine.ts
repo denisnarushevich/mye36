@@ -21,7 +21,7 @@ export function useRoutine(
   delayMs: number,
   deps: DependencyList = [],
 ) {
-  const timeLastRun = useRef<number>(Date.now());
+  const timeLastRun = useRef<number>();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const _fn = useCallback(fn, deps);
@@ -29,10 +29,12 @@ export function useRoutine(
   useEffect(() => {
     let intervalId: any;
 
+    timeLastRun.current = timeLastRun.current ?? Date.now();
+
     const timeoutId = setTimeout(
       () => {
         const now = Date.now();
-        const dtime = now - timeLastRun.current;
+        const dtime = now - timeLastRun.current!;
 
         timeLastRun.current = now;
 
@@ -40,6 +42,7 @@ export function useRoutine(
           _fn(
             () => {
               clearTimeout(timeoutId);
+              timeLastRun.current = void 0;
               throw RoutineStoppedError;
             },
             dtime,
@@ -48,7 +51,7 @@ export function useRoutine(
 
           intervalId = setInterval(() => {
             const now = Date.now();
-            const dtime = now - timeLastRun.current;
+            const dtime = now - timeLastRun.current!;
 
             timeLastRun.current = now;
 
@@ -56,6 +59,7 @@ export function useRoutine(
               _fn(
                 () => {
                   clearInterval(intervalId);
+                  timeLastRun.current = void 0;
                   throw RoutineStoppedError;
                 },
                 dtime,
