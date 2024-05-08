@@ -1,12 +1,21 @@
 import BaseLayout from "@/app/BaseLayout";
-import { useCallback, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import numeral from "numeral";
 import { useRoutine } from "@/app/useRoutine";
 import clsx from "clsx";
 import Noise from "noise-ts";
-import { GameState, Location, places } from "@/app/gameState";
+import {
+  GameState,
+  Location,
+  places,
+  start,
+  usePlayerStore,
+  useWorldStore,
+} from "@/app/gameState";
 import { MdLocalGasStation } from "react-icons/md";
 import { useAsyncFn } from "react-use";
+import { SECONDS_IN_DAY, SECONDS_IN_HOUR } from "@/app/const";
+import { getCurrentTask, registerTask, taskProgress } from "@/app/tasks";
 
 const noise = new Noise(Math.random());
 
@@ -49,9 +58,6 @@ type GameAction =
       dtimeSeconds: number;
     };
 
-const SECONDS_IN_DAY = 86400;
-const SECONDS_IN_MINUTE = 60;
-const SECONDS_IN_HOUR = 3600;
 const SALARY_PERIOD = SECONDS_IN_DAY * 30;
 const TIME_MULTIPLIER_SECONDS = SECONDS_IN_HOUR;
 const FUEL_CONSUMPTIOM_PER_100_KM = 10;
@@ -86,10 +92,6 @@ function reducer(state: GameState, action: GameAction) {
   if (action.type === GameActionType.UPDATE) {
     const newTimeSeconds =
       state.timeSeconds + action.dtimeSeconds * TIME_MULTIPLIER_SECONDS;
-
-    const daily =
-      Math.floor(newTimeSeconds / SECONDS_IN_DAY) -
-      Math.floor(state.timeSeconds / SECONDS_IN_DAY);
 
     const day = Math.floor(newTimeSeconds / SECONDS_IN_DAY);
     const daily0to1 = (noise.simplex2(0, day / 100) + 1) / 2;
@@ -129,6 +131,10 @@ function reducer(state: GameState, action: GameAction) {
 }
 
 export default function Game() {
+  const { timeSeconds } = useWorldStore(({ timeSeconds }) => ({
+    timeSeconds,
+  }));
+
   const [state, dispatch] = useReducer(reducer, {
     odoKm: 372943,
     fuelLiters: 5.7,
@@ -211,42 +217,57 @@ export default function Game() {
     });
   }, []);
 
-  const [{ loading: working }, work] = useAsyncFn(async () => {
-    const distance = places.father.distance;
-    const enoughFuel =
-      (distance * FUEL_CONSUMPTIOM_PER_100_KM) / 100 <= state.fuelLiters;
+  // const [{ loading: working }, work] = useAsyncFn(async () => {
+  //   const distance = places.father.distance;
+  //   const enoughFuel =
+  //     (distance * FUEL_CONSUMPTIOM_PER_100_KM) / 100 <= state.fuelLiters;
+  //
+  //   if (enoughFuel) {
+  //     return new Promise((resolve) => {
+  //       setTimeout(() => {
+  //         dispatch({
+  //           type: GameActionType.GO_TO,
+  //           place: "father",
+  //         });
+  //
+  //         setTimeout(() => {
+  //           dispatch({
+  //             type: GameActionType.SET_CASH,
+  //             amount: state.cash + places.father.profit,
+  //           });
+  //
+  //           setTimeout(() => {
+  //             dispatch({
+  //               type: GameActionType.GO_TO,
+  //               place: "home",
+  //             });
+  //
+  //             resolve(void 0);
+  //           }, 3000);
+  //         }, 3000);
+  //       }, 1000);
+  //     });
+  //   }
+  // }, [dispatch, state.cash]);
 
-    if (enoughFuel) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          dispatch({
-            type: GameActionType.GO_TO,
-            place: "father",
-          });
+  // const [{ loading: working }, work] = useAsyncFn(
+  //   async () =>
+  //     await registerTask({
+  //       type: "GO_TO",
+  //       duration: SECONDS_IN_HOUR * 3,
+  //     }),
+  // );
 
-          setTimeout(() => {
-            dispatch({
-              type: GameActionType.SET_CASH,
-              amount: state.cash + places.father.profit,
-            });
+  const currentTask = getCurrentTask()?.id;
 
-            setTimeout(() => {
-              dispatch({
-                type: GameActionType.GO_TO,
-                place: "home",
-              });
-
-              resolve(void 0);
-            }, 3000);
-          }, 3000);
-        }, 1000);
-      });
-    }
-  }, [dispatch, state.cash]);
+  const progress = currentTask !== undefined && taskProgress(currentTask);
 
   const handleGoToWork = useCallback(() => {
-    work();
-  }, [work]);
+    registerTask({
+      type: "GO_TO",
+      duration: SECONDS_IN_HOUR * 8,
+    });
+  }, []);
 
   useRoutine((stop, dtime, now) => {
     dispatch({
@@ -255,11 +276,24 @@ export default function Game() {
     });
   }, 200);
 
+  useEffect(() => {
+    start();
+
+    () => {
+      stop();
+    };
+  }, []);
+
+  const { tasks } = usePlayerStore((state) => state);
+
   return (
     <BaseLayout
       header={<div className="h-16 px-4 flex items-center">My E36</div>}
       overlay={
         <div className="h-full flex flex-col justify-end p-4 items-stretch space-y-4">
+          <div className="flex space-x-4 justify-center">
+            <div>{timeSeconds}</div>
+          </div>
           <div className="flex space-x-4 justify-center">
             <div>{numeral(state.timeSeconds / 86400).format(`0`)} DAY</div>
           </div>
@@ -316,14 +350,14 @@ export default function Game() {
           <div className="flex space-x-4 justify-center">
             <button
               className={clsx("btn no-animation", {
-                "btn-active": working,
+                "btn-active": progress,
               })}
-              onClick={!working ? handleGoToWork : () => void 0}
+              onClick={!progress ? handleGoToWork : () => void 0}
             >
-              {working && (
+              {progress && (
                 <span className="loading loading-bars loading-md"></span>
               )}
-              Šancet ar Fateri
+              Šancet ar Fateri ({numeral(progress).format(`0.00`)})
             </button>
           </div>
         </div>
