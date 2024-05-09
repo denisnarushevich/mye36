@@ -1,10 +1,23 @@
 import { events } from "@/app/events";
-import { isTickEvent, playerStore, Task, worldStore } from "@/app/gameState";
+import { getTime, isTickEvent } from "@/app/gameState";
+import { playerStore } from "@/app/player";
 
-function isTaskCompletedEvent(event: Event): event is CustomEvent<{
-  taskId: string;
-}> {
+export function isTaskCompletedEvent<T>(event: Event): event is CustomEvent<
+  T & {
+    id: number;
+    name: string;
+  }
+> {
   return event.type === "taskCompleted";
+}
+
+export function isTaskStartedEvent<T>(event: Event): event is CustomEvent<
+  T & {
+    id: number;
+    name: string;
+  }
+> {
+  return event.type === "taskStarted";
 }
 
 events.addEventListener("tick", (e) => {
@@ -12,20 +25,21 @@ events.addEventListener("tick", (e) => {
     const timeSeconds = e.detail.timeSeconds;
     const tasks = playerStore.getState().tasks;
 
-    tasks.forEach((task) => {
-      const { id, startedAt, duration } = task;
-
-      console.log(timeSeconds, startedAt + duration);
-      if (timeSeconds >= startedAt + duration) {
+    tasks.forEach(({ startedAt, durationSec, ...task }) => {
+      if (timeSeconds >= startedAt + durationSec) {
         playerStore.setState(({ tasks }) => {
-          tasks.splice(tasks.indexOf(task));
+          tasks.shift();
         });
 
         events.dispatchEvent(
           new CustomEvent("taskCompleted", {
-            detail: {
-              taskId: id,
-            },
+            detail: task,
+          }),
+        );
+      } else if (timeSeconds >= startedAt) {
+        events.dispatchEvent(
+          new CustomEvent("taskStarted", {
+            detail: task,
           }),
         );
       }
@@ -33,25 +47,29 @@ events.addEventListener("tick", (e) => {
   }
 });
 
-let taskIdInc = 0;
-export function registerTask(task: Omit<Task, "id" | "startedAt">) {
-  const taskId = (taskIdInc++).toString();
+let taskLastId = 0;
+
+export function scheduleTask<T extends { name: string; durationSec: number }>(
+  task: T,
+) {
+  const id = taskLastId++;
 
   return new Promise<void>((resolve) => {
-    playerStore.setState((state) => ({
-      ...state,
-      tasks: [
-        ...state.tasks,
-        {
-          id: taskId,
-          startedAt: worldStore.getState().timeSeconds,
-          ...task,
-        },
-      ],
-    }));
+    playerStore.setState((state) => {
+      const lastTask = state.tasks[state.tasks.length - 1];
+
+      state.tasks.push({
+        id,
+        ...task,
+        startedAt:
+          lastTask !== undefined
+            ? lastTask.startedAt + lastTask.durationSec
+            : getTime(),
+      });
+    });
 
     const cb = (e: Event) => {
-      if (isTaskCompletedEvent(e) && e.detail.taskId === taskId) {
+      if (isTaskCompletedEvent(e) && e.detail.id === id) {
         events.removeEventListener("taskCompleted", cb);
 
         resolve();
@@ -60,15 +78,4 @@ export function registerTask(task: Omit<Task, "id" | "startedAt">) {
 
     events.addEventListener("taskCompleted", cb);
   });
-}
-
-export function getCurrentTask() {
-  return playerStore.getState().tasks[0];
-}
-
-export function taskProgress(taskId: string) {
-  const task = playerStore.getState().tasks.find(({ id }) => taskId === id);
-  if (task) {
-    return (worldStore.getState().timeSeconds - task.startedAt) / task.duration;
-  }
 }
