@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 import { useStore } from "zustand";
-import { SECONDS_IN_DAY, TIME_MULTIPLIER_SECONDS } from "@/app/const";
+import { SECONDS_IN_DAY, TICK_MS, TIME_RATE } from "@/app/const";
 import { events } from "@/app/events";
 import { immer } from "zustand/middleware/immer";
 import Noise from "noise-ts";
@@ -10,14 +10,12 @@ const noise = new Noise(Math.random());
 export type WorldState = {
   timeSeconds: number;
   fuelPricePerLiter: number;
-  tick(): void;
+  tick(dtime: number): void;
 };
 
 export type Task = {
   id: number;
   name: string;
-  startedAt: number;
-  durationSec: number;
 };
 
 export const worldStore = createStore<WorldState>()(
@@ -25,12 +23,13 @@ export const worldStore = createStore<WorldState>()(
     timeSeconds: 0,
     fuelPricePerLiter: 1.78,
 
-    tick() {
+    tick(deltaTimeMs) {
       const state = getState();
-      const newTimeSeconds = state.timeSeconds + TIME_MULTIPLIER_SECONDS;
+      const newTimeSeconds =
+        state.timeSeconds + (deltaTimeMs / 1000) * TIME_RATE;
 
       const day = Math.floor(newTimeSeconds / SECONDS_IN_DAY);
-      const daily0to1 = (noise.simplex2(0, day / 100) + 1) / 2;
+      const daily0to1 = (noise.simplex2(1, 1 + day / 100) + 1) / 2;
 
       set((state) => {
         state.timeSeconds = newTimeSeconds;
@@ -49,11 +48,10 @@ let timer: number = -1;
 
 export function isTickEvent(event: Event): event is CustomEvent<{
   timeSeconds: number;
+  deltaTimeMs: number;
 }> {
   return event.type === "tick";
 }
-
-const TICK_MS = 1000;
 
 export function start() {
   stop();
@@ -62,17 +60,18 @@ export function start() {
   (function fn(ms = TICK_MS) {
     timer = setTimeout(() => {
       const now = Date.now();
-      const dtime = now - time0;
-      const ms = TICK_MS * 2 - dtime;
+      const deltaTimeMs = now - time0;
+      const ms = TICK_MS * 2 - deltaTimeMs;
       time0 = now;
 
       const { tick } = worldStore.getState();
 
-      tick();
+      tick(deltaTimeMs);
 
       events.dispatchEvent(
         new CustomEvent("tick", {
           detail: {
+            deltaTimeMs,
             timeSeconds: worldStore.getState().timeSeconds,
           },
         }),

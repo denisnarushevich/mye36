@@ -1,57 +1,73 @@
+import { scheduleTask } from "@/app/tasks";
 import {
-  isTaskCompletedEvent,
-  isTaskStartedEvent,
-  scheduleTask,
-} from "@/app/tasks";
-import { FUEL_CONSUMPTIOM_PER_100_KM, SECONDS_IN_HOUR } from "@/app/const";
+  AVG_KMH,
+  FUEL_CONSUMPTIOM_PER_100_KM,
+  SECONDS_IN_HOUR,
+  TIME_RATE,
+} from "@/app/const";
 import { events } from "@/app/events";
 import { Location, places, playerStore } from "@/app/player";
+import { isTickEvent, Task } from "@/app/gameState";
 
-const AVG_KMH = 30;
+type TravelTask = Task & {
+  from: Location;
+  to: Location;
+  progressKm: number;
+};
 
 export function travel(location: Location) {
-  const distance = places[location].distance;
+  const from = playerStore.getState().location;
+  if (from !== undefined) {
+    scheduleTask({
+      name: "travel",
+      from: from,
+      progressKm: 0,
+      to: location,
+    });
 
-  const durationSec = (distance / AVG_KMH) * SECONDS_IN_HOUR;
-
-  scheduleTask({
-    name: "travel",
-    durationSec,
-    from: playerStore.getState().location,
-    to: location,
-  });
+    playerStore.setState((state) => {
+      state.location = undefined;
+    });
+  }
 }
 
-events.addEventListener("taskStarted", (e) => {
-  if (
-    isTaskStartedEvent<{
-      from: Location;
-      to: Location;
-    }>(e)
-  ) {
-    if (e.detail.name === "travel") {
-      playerStore.setState((state) => {
-        state.location = undefined;
-      });
-    }
-  }
-});
+function isTravelTask(task: Task): task is TravelTask {
+  return task.name === "travel";
+}
 
-events.addEventListener("taskCompleted", (e) => {
-  if (
-    isTaskCompletedEvent<{
-      from: Location;
-      to: Location;
-    }>(e)
-  ) {
-    if (e.detail.name === "travel") {
-      const distance = places[e.detail.to].distance;
+events.addEventListener("tick", (e) => {
+  if (isTickEvent(e)) {
+    const tasks = playerStore.getState().tasks.filter(isTravelTask);
 
-      playerStore.setState((state) => {
-        state.location = e.detail.to;
-        state.fuelLiters -= (distance * FUEL_CONSUMPTIOM_PER_100_KM) / 100;
-        state.odoKm += distance;
-      });
-    }
+    tasks.forEach(({ ...task }, index) => {
+      const distance = places[task.to].distance;
+      const dkm = Math.min(
+        (((e.detail.deltaTimeMs / 1000) * TIME_RATE) / SECONDS_IN_HOUR) *
+          AVG_KMH,
+        distance - task.progressKm,
+      );
+      const dfuel = dkm * (FUEL_CONSUMPTIOM_PER_100_KM / 100);
+      const progressKm = Math.min(distance, task.progressKm + dkm);
+      console.log(e.detail.deltaTimeMs);
+
+      if (progressKm < distance) {
+        playerStore.setState((state) => {
+          const _task = state.tasks.find(
+            ({ id }) => task.id === id,
+          ) as TravelTask;
+          _task.progressKm = progressKm;
+          state.fuelLiters -= dfuel;
+          state.odoKm += dkm;
+        });
+      } else {
+        playerStore.setState((state) => {
+          const taskIndex = state.tasks.findIndex(({ id }) => task.id === id);
+          state.tasks.splice(taskIndex, 1);
+          state.odoKm += dkm;
+          state.location = task.to;
+          state.fuelLiters -= dfuel;
+        });
+      }
+    });
   }
 });

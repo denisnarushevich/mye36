@@ -8,6 +8,7 @@ import { MdLocalGasStation } from "react-icons/md";
 import {
   FUEL_TANK_CAPACITY_LITERS,
   REFUEL_RATE_LITERS_PER_SECONDS,
+  SECONDS_IN_DAY,
   SECONDS_IN_HOUR,
 } from "@/app/const";
 import { travel } from "@/app/travel";
@@ -73,12 +74,28 @@ export default function Game() {
     setRefueling(false);
   }, []);
 
-  const handleGoToWork = useCallback(() => {
+  const handleWork = useCallback(() => {
+    work(SECONDS_IN_HOUR * 1000 * 2);
+  }, []);
+
+  const handleVisitGrandma = useCallback(() => {
+    work(SECONDS_IN_HOUR * 1000);
+  }, []);
+
+  const handleGoToFather = useCallback(() => {
     travel("father");
+  }, []);
 
-    work(SECONDS_IN_HOUR * 3);
+  const handleGoToPetrol = useCallback(() => {
+    travel("petrol");
+  }, []);
 
+  const handleGoHome = useCallback(() => {
     travel("home");
+  }, []);
+
+  const handleGoToGrandma = useCallback(() => {
+    travel("grandma");
   }, []);
 
   useEffect(() => {
@@ -89,26 +106,18 @@ export default function Game() {
     };
   }, []);
 
-  const { tasks, location } = usePlayerStore((state) => state);
-
-  const busy = tasks.length > 0;
+  const busy = playerState.tasks.length > 0;
 
   return (
     <BaseLayout
       header={<div className="h-16 px-4 flex items-center">My E36</div>}
       overlay={
         <div className="h-full flex flex-col justify-end p-4 items-stretch space-y-4">
+          {/*<div className="flex space-x-4 justify-center">*/}
+          {/*  <div>{numeral(timeSeconds).format(`0`)}</div>*/}
+          {/*</div>*/}
           <div className="flex space-x-4 justify-center">
-            <div>{timeSeconds}</div>
-          </div>
-          <div className="flex space-x-4 justify-center">
-            <div>
-              {numeral(worldStore.getState().timeSeconds / 86400).format(`0`)}{" "}
-              DAY
-            </div>
-          </div>
-          <div className="flex space-x-4 justify-center">
-            <div>{playerState.location ?? "somewhere"}</div>
+            <div>{numeral(timeSeconds / SECONDS_IN_DAY).format(`0`)} DAY</div>
           </div>
           <div className="flex space-x-4 justify-center">
             <div
@@ -118,53 +127,130 @@ export default function Game() {
             </div>
           </div>
           <div className="flex space-x-4 justify-center">
+            <div>FUEL: {numeral(playerState.fuelLiters).format(`0.0`)} L</div>
+          </div>
+          <div className="flex space-x-4 justify-center">
             <div>ODO: {numeral(playerState.odoKm).format(`000,000`)} KM</div>
           </div>
           <div className="flex space-x-4 justify-center">
-            <button
-              className={clsx("btn no-animation", {
-                "text-red-500": playerState.fuelLiters <= 0,
-                "text-orange-500":
-                  playerState.fuelLiters <= 5 && playerState.fuelLiters > 0,
-                "text-white":
-                  playerState.fuelLiters > 5 &&
-                  playerState.fuelLiters < FUEL_TANK_CAPACITY_LITERS,
-                "text-green-400":
-                  playerState.fuelLiters == FUEL_TANK_CAPACITY_LITERS,
-              })}
-              onPointerDown={handleRefuelStart}
-              onPointerUp={handleRefuelStop}
-              onPointerOut={handleRefuelStop}
-            >
-              <MdLocalGasStation
-                className={clsx("w-6 h-6 pointer-events-none")}
-              />
-              <div className="text-left">
-                <div className="text-base leading-none font-bold">
-                  {numeral(playerState.fuelLiters).format(`0.0`)} L
-                </div>
-                <div className="pt-1 text-xs leading-none text-gray-300 flex items-center gap-1">
-                  €{" "}
-                  {numeral(worldStore.getState().fuelPricePerLiter).format(
-                    `0.000`,
-                  )}{" "}
-                  / L
-                </div>
-              </div>
-            </button>
+            {busy ? (
+              <span className="loading loading-bars loading-md"></span>
+            ) : (
+              playerState.location ?? "somewhere"
+            )}
           </div>
           <div className="flex space-x-4 justify-center">
-            {busy && <span className="loading loading-bars loading-md"></span>}
-          </div>
-          <div className="flex space-x-4 justify-center">
-            <button
-              className={clsx("btn no-animation", {
-                "btn-disabled": busy,
-              })}
-              onClick={!busy ? handleGoToWork : () => void 0}
-            >
-              Šancet ar Fateri
-            </button>
+            {playerState.location === "home" && (
+              <>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleGoToFather : () => void 0}
+                >
+                  Pie Fatera
+                </button>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleGoToPetrol : () => void 0}
+                >
+                  Uz DUS
+                </button>
+              </>
+            )}
+            {playerState.location === "father" && (
+              <>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleWork : () => void 0}
+                >
+                  Šancet ar Fateri
+                </button>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleGoToGrandma : () => void 0}
+                >
+                  Pie Omes
+                </button>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleGoHome : () => void 0}
+                >
+                  Uz Majam
+                </button>
+              </>
+            )}
+            {playerState.location === "grandma" && (
+              <>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleVisitGrandma : () => void 0}
+                >
+                  Apciemot Omi
+                </button>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleGoToFather : () => void 0}
+                >
+                  Pie Fatera
+                </button>
+              </>
+            )}
+            {playerState.location === "petrol" && (
+              <>
+                <button
+                  className={clsx("btn no-animation", {
+                    "text-red-500": playerState.fuelLiters <= 0,
+                    "text-orange-500":
+                      playerState.fuelLiters <= 5 && playerState.fuelLiters > 0,
+                    "text-white":
+                      playerState.fuelLiters > 5 &&
+                      playerState.fuelLiters < FUEL_TANK_CAPACITY_LITERS,
+                    "text-green-400":
+                      playerState.fuelLiters == FUEL_TANK_CAPACITY_LITERS,
+                  })}
+                  onPointerDown={handleRefuelStart}
+                  onPointerUp={handleRefuelStop}
+                  onPointerOut={handleRefuelStop}
+                >
+                  <MdLocalGasStation
+                    className={clsx("w-6 h-6 pointer-events-none")}
+                  />
+                  <div className="text-left">
+                    <div className="text-base leading-none font-bold">
+                      {numeral(playerState.fuelLiters).format(`0.0`)} L
+                    </div>
+                    <div className="pt-1 text-xs leading-none text-gray-300 flex items-center gap-1">
+                      €{" "}
+                      {numeral(worldStore.getState().fuelPricePerLiter).format(
+                        `0.000`,
+                      )}{" "}
+                      / L
+                    </div>
+                  </div>
+                </button>
+                <button
+                  className={clsx("btn no-animation", {
+                    "btn-disabled": busy,
+                  })}
+                  onClick={!busy ? handleGoHome : () => void 0}
+                >
+                  Uz Majam
+                </button>
+              </>
+            )}
           </div>
         </div>
       }

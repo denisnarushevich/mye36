@@ -8,6 +8,9 @@ export const places = {
   home: {
     distance: 9,
   },
+  petrol: {
+    distance: 5,
+  },
   father: {
     distance: 10,
     profit: 25,
@@ -15,9 +18,6 @@ export const places = {
   grandma: {
     distance: 7,
     profit: 10,
-  },
-  spot: {
-    distance: 5,
   },
 };
 
