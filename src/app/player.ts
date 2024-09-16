@@ -5,36 +5,39 @@ import { Task } from "@/app/gameState";
 import { useStore } from "zustand";
 
 export const places = {
-  home: {
+  majas: {
     distance: 9,
   },
-  petrol: {
+  dus: {
     distance: 5,
   },
-  father: {
+  fateris: {
     distance: 10,
     profit: 25,
   },
-  grandma: {
+  ome: {
     distance: 7,
     profit: 10,
   },
+  fenixx: {
+    distance: 6,
+  },
 };
 
-export type Location = keyof typeof places;
+export type Location = string;
 
 export type PlayerState = {
   odoKm: number;
   fuelLiters: number;
   cash: number;
-  location?: Location;
+  location?: string;
   tasks: Task[];
   addFuel(liters: number): void;
 };
 
 export const playerStore = createStore<PlayerState>()(
   immer((set, getState) => ({
-    location: "home",
+    location: "majas",
     fuelLiters: 5,
     odoKm: 372943,
     cash: 100,

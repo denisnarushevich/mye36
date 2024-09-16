@@ -4,9 +4,9 @@ export const SECONDS_IN_DAY = 86400;
 
 export const AVG_KMH = 30;
 
-export const TICK_MS = 500;
+export const TICK_MS = 50;
 
-export const TIME_RATE = 100;
+export const TIME_RATE = 1000;
 export const FUEL_CONSUMPTIOM_PER_100_KM = 10;
 export const FUEL_TANK_CAPACITY_LITERS = 60;
 export const REFUEL_RATE_LITERS_PER_SECONDS = 1;

@@ -48,7 +48,7 @@ events.addEventListener("tick", (e) => {
       );
       const dfuel = dkm * (FUEL_CONSUMPTIOM_PER_100_KM / 100);
       const progressKm = Math.min(distance, task.progressKm + dkm);
-      console.log(e.detail.deltaTimeMs);
+      // console.log(e.detail.deltaTimeMs);
 
       if (progressKm < distance) {
         playerStore.setState((state) => {
