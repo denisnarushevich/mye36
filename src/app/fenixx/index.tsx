@@ -4,6 +4,8 @@ import { majasLocationKey } from "@/app/majas";
 import { Button } from "@/app/ui/Button";
 import { setCash } from "@/app/player";
 import { dusLocationKey } from "@/app/dus";
+import { useState } from "react";
+import { BookOfSunButton } from "@/app/fenixx/BookOfSunButton";
 
 export const fenixxLocationKey = "fenixx";
 
@@ -33,18 +35,6 @@ export default function fenixxLocation({ map, locationActions }: PluginArgs) {
   );
 
   locationActions[fenixxLocationKey] = ({ playerState }) => {
-    return (
-      <Button
-        disabled={playerState.tasks.length > 0}
-        onClick={() =>
-          setCash(playerState.cash - 1 + 100 * (Math.random() > 0.9 ? 1 : 0))
-        }
-      >
-        <div>
-          <div>Book of Sun</div>
-          <div>-1€</div>
-        </div>
-      </Button>
-    );
+    return <BookOfSunButton />;
   };
 }
