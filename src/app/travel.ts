@@ -6,8 +6,9 @@ import {
   TIME_RATE,
 } from "@/app/const";
 import { events } from "@/app/events";
-import { Location, places, playerStore } from "@/app/player";
+import { Location, playerStore } from "@/app/player";
 import { isTickEvent, Task } from "@/app/gameState";
+import {worldMap} from "@/app/worldMap";
 
 type TravelTask = Task & {
   from: Location;
@@ -40,7 +41,12 @@ events.addEventListener("tick", (e) => {
     const tasks = playerStore.getState().tasks.filter(isTravelTask);
 
     tasks.forEach(({ ...task }, index) => {
-      const distance = places[task.to].distance;
+
+      const edge = worldMap.getEdge(task.from, task.to);
+      const distance = edge?.value?.distance;
+
+      if(!distance) throw `invalid distance for edge ${edge}`;
+
       const dkm = Math.min(
         (((e.detail.deltaTimeMs / 1000) * TIME_RATE) / SECONDS_IN_HOUR) *
           AVG_KMH,

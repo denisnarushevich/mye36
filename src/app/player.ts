@@ -4,25 +4,7 @@ import { FUEL_TANK_CAPACITY_LITERS } from "@/app/const";
 import { Task } from "@/app/gameState";
 import { useStore } from "zustand";
 
-export const places = {
-  majas: {
-    distance: 9,
-  },
-  dus: {
-    distance: 5,
-  },
-  fateris: {
-    distance: 10,
-    profit: 25,
-  },
-  ome: {
-    distance: 7,
-    profit: 10,
-  },
-  fenixx: {
-    distance: 6,
-  },
-};
+
 
 export type Location = string;
 
