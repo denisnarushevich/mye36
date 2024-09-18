@@ -40,7 +40,10 @@ export default function fenixxLocation({ map, locationActions }: PluginArgs) {
           setCash(playerState.cash - 1 + 100 * (Math.random() > 0.9 ? 1 : 0))
         }
       >
-        Book of Sun
+        <div>
+          <div>Book of Sun</div>
+          <div>-1€</div>
+        </div>
       </Button>
     );
   };
