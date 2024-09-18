@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import numeral from "numeral";
 import clsx from "clsx";
 import { start, useWorldStore } from "@/app/gameState";
-import { SECONDS_IN_DAY } from "@/app/const";
+import { FUEL_TANK_CAPACITY_LITERS, SECONDS_IN_DAY } from "@/app/const";
 import { travel } from "@/app/travel";
 import { usePlayerStore } from "@/app/player";
 import { locationActions } from "@/app/locationActions";
@@ -47,7 +47,20 @@ export default function Game() {
             </div>
           </div>
           <div className="flex space-x-4 justify-center">
-            <div>FUEL: {numeral(playerState.fuelLiters).format(`0.0`)} L</div>
+            <div
+              className={clsx({
+                "text-red-500": playerState.fuelLiters <= 0,
+                "text-orange-500":
+                  playerState.fuelLiters <= 5 && playerState.fuelLiters > 0,
+                "text-white":
+                  playerState.fuelLiters > 5 &&
+                  playerState.fuelLiters < FUEL_TANK_CAPACITY_LITERS,
+                "text-green-400":
+                  playerState.fuelLiters == FUEL_TANK_CAPACITY_LITERS,
+              })}
+            >
+              FUEL: {numeral(playerState.fuelLiters).format(`0.0`)} L
+            </div>
           </div>
           <div className="flex space-x-4 justify-center">
             <div>ODO: {numeral(playerState.odoKm).format(`000,000`)} KM</div>

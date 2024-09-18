@@ -71,15 +71,7 @@ export function DusButton() {
 
   return (
     <button
-      className={clsx("btn no-animation", {
-        "text-red-500": playerState.fuelLiters <= 0,
-        "text-orange-500":
-          playerState.fuelLiters <= 5 && playerState.fuelLiters > 0,
-        "text-white":
-          playerState.fuelLiters > 5 &&
-          playerState.fuelLiters < FUEL_TANK_CAPACITY_LITERS,
-        "text-green-400": playerState.fuelLiters == FUEL_TANK_CAPACITY_LITERS,
-      })}
+      className={clsx("btn no-animation", "text-white")}
       onPointerDown={handleRefuelStart}
       onPointerUp={handleRefuelStop}
       onPointerOut={handleRefuelStop}
