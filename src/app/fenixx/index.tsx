@@ -10,19 +10,27 @@ export const fenixxLocationKey = "fenixx";
 export default function fenixxLocation({ map, locationActions }: PluginArgs) {
   map.addVertex(new DirectedVertex(fenixxLocationKey));
 
-  map.addEdge(new DirectedEdge(majasLocationKey, fenixxLocationKey, undefined, {
-    distance: 3
-  }));
-  map.addEdge(new DirectedEdge(fenixxLocationKey, majasLocationKey, undefined, {
-    distance: 3
-  }));
+  map.addEdge(
+    new DirectedEdge(majasLocationKey, fenixxLocationKey, undefined, {
+      distance: 100,
+    }),
+  );
+  map.addEdge(
+    new DirectedEdge(fenixxLocationKey, majasLocationKey, undefined, {
+      distance: 100,
+    }),
+  );
 
-  map.addEdge(new DirectedEdge(dusLocationKey, fenixxLocationKey, undefined, {
-    distance: 5
-  }));
-  map.addEdge(new DirectedEdge(fenixxLocationKey, dusLocationKey, undefined, {
-    distance: 5
-  }));
+  map.addEdge(
+    new DirectedEdge(dusLocationKey, fenixxLocationKey, undefined, {
+      distance: 5,
+    }),
+  );
+  map.addEdge(
+    new DirectedEdge(fenixxLocationKey, dusLocationKey, undefined, {
+      distance: 5,
+    }),
+  );
 
   locationActions[fenixxLocationKey] = ({ playerState }) => {
     return (

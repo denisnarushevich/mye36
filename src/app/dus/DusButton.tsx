@@ -13,6 +13,8 @@ import { playerStore, setCash, usePlayerStore } from "@/app/player";
 export function DusButton() {
   const playerState = usePlayerStore((state) => state);
 
+  const [fuelCounter, setFuelCounter] = useState(0);
+
   const [refueling, setRefueling] = useState(false);
 
   useRoutine(
@@ -49,6 +51,7 @@ export function DusButton() {
         const _state = playerStore.getState();
         setCash(money);
         _state.addFuel(fuelAmount);
+        setFuelCounter((prevState) => prevState + fuelAmount);
       } else {
         stop();
       }
@@ -63,6 +66,7 @@ export function DusButton() {
 
   const handleRefuelStop = useCallback(() => {
     setRefueling(false);
+    setFuelCounter(0);
   }, []);
 
   return (
@@ -83,7 +87,7 @@ export function DusButton() {
       <MdLocalGasStation className={clsx("w-6 h-6 pointer-events-none")} />
       <div className="text-left">
         <div className="text-base leading-none font-bold">
-          {numeral(playerState.fuelLiters).format(`0.0`)} L
+          {numeral(fuelCounter).format(`0.0`)} L
         </div>
         <div className="pt-1 text-xs leading-none text-gray-300 flex items-center gap-1">
           € {numeral(worldStore.getState().fuelPricePerLiter).format(`0.000`)} /
