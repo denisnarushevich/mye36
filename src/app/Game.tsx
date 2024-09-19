@@ -102,8 +102,8 @@ export default function Game() {
         </div>
       }
     >
-      <div className="h-1/2 bg-blue-500" />
-      <div className="h-1/2 bg-green-900" />
+      <div className="h-1/2 bg-gradient-to-t from-blue-400 to-blue-800" />
+      <div className="h-1/2 bg-gradient-to-t from-green-900 to-green-700" />
       <div className="absolute inset-0 flex items-center justify-center">
         <Car speed={playerState.location === undefined ? 1 : 0} />
       </div>
