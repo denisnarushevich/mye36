@@ -22,7 +22,7 @@ export function BookOfSunButton() {
     >
       <div>
         {playing && <span className="loading loading-bars loading-xs"></span>}
-        <div>Book of Sun</div>
+        <div>Play: Book of Sun</div>
         <div>-1€</div>
       </div>
     </Button>
