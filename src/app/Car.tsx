@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 export function Car({ speed }: { speed: number }) {
   return (
-    <div className="relative w-[320px] h-[160px] px-[32px] flex justify-between items-end">
+    <div className="relative w-[240px] h-[160px] px-[32px] flex justify-between items-end">
       <div className="absolute inset-0 bg-base-200 bottom-[32px] top-[64px]"></div>
 
       <div className="absolute bg-base-200 bottom-[32px] top-0 left-8 right-[64px]"></div>

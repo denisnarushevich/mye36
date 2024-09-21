@@ -8,7 +8,7 @@ import {
 import { events } from "@/app/events";
 import { Location, playerStore } from "@/app/player";
 import { isTickEvent, Task } from "@/app/gameState";
-import {worldMap} from "@/app/worldMap";
+import { worldMap } from "@/app/worldMap";
 
 type TravelTask = Task & {
   from: Location;
@@ -32,7 +32,7 @@ export function travel(location: Location) {
   }
 }
 
-function isTravelTask(task: Task): task is TravelTask {
+export function isTravelTask(task: Task): task is TravelTask {
   return task.name === "travel";
 }
 
@@ -41,11 +41,10 @@ events.addEventListener("tick", (e) => {
     const tasks = playerStore.getState().tasks.filter(isTravelTask);
 
     tasks.forEach(({ ...task }, index) => {
-
       const edge = worldMap.getEdge(task.from, task.to);
       const distance = edge?.value?.distance;
 
-      if(!distance) throw `invalid distance for edge ${edge}`;
+      if (!distance) throw `invalid distance for edge ${edge}`;
 
       const dkm = Math.min(
         (((e.detail.deltaTimeMs / 1000) * TIME_RATE) / SECONDS_IN_HOUR) *
@@ -58,12 +57,18 @@ events.addEventListener("tick", (e) => {
 
       if (progressKm < distance) {
         playerStore.setState((state) => {
+          const taskIndex = state.tasks.findIndex(({ id }) => task.id === id);
           const _task = state.tasks.find(
             ({ id }) => task.id === id,
           ) as TravelTask;
-          _task.progressKm = progressKm;
-          state.fuelLiters -= dfuel;
-          state.odoKm += dkm;
+
+          if (state.fuelLiters >= 0) {
+            _task.progressKm = progressKm;
+            state.fuelLiters -= dfuel;
+            state.odoKm += dkm;
+          } else {
+            state.tasks.splice(taskIndex, 1);
+          }
         });
       } else {
         playerStore.setState((state) => {

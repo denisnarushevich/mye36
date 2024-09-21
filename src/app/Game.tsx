@@ -3,8 +3,8 @@ import numeral from "numeral";
 import clsx from "clsx";
 import { start, useWorldStore } from "@/app/gameState";
 import { FUEL_TANK_CAPACITY_LITERS, SECONDS_IN_DAY } from "@/app/const";
-import { travel } from "@/app/travel";
-import { usePlayerStore } from "@/app/player";
+import { isTravelTask, travel } from "@/app/travel";
+import { playerStore, usePlayerStore } from "@/app/player";
 import { locationActions } from "@/app/locationActions";
 import { worldMap } from "@/app/worldMap";
 import { Button } from "@/app/ui/Button";
@@ -98,6 +98,33 @@ export default function Game() {
                   </Button>
                 );
               })}
+            {playerState.fuelLiters <= 0 && (
+              <Button
+                key="nofuel"
+                onClick={() => {
+                  playerStore.setState((state) => {
+                    state.location = "dus";
+                  });
+                }}
+              >
+                <div>
+                  <div>Stumt Uz: DUS</div>
+                </div>
+              </Button>
+            )}
+            <Button
+              key="smscredit"
+              onClick={() => {
+                playerStore.setState((state) => {
+                  state.cash += 50;
+                });
+              }}
+            >
+              <div>
+                <div>MMS Credit</div>
+                <div>+100</div>
+              </div>
+            </Button>
           </div>
         </div>
       }
@@ -105,7 +132,7 @@ export default function Game() {
       <div className="h-1/2 bg-gradient-to-t from-indigo-800 to-indigo-950" />
       <div className="h-1/2 bg-gradient-to-t from-slate-900 to-slate-800" />
       <div className="absolute inset-0 flex items-center justify-center">
-        <Car speed={playerState.location === undefined ? 1 : 0} />
+        <Car speed={playerState.tasks.find(isTravelTask) ? 1 : 0} />
       </div>
     </BaseLayout>
   );
