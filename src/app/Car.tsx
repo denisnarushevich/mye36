@@ -13,7 +13,7 @@ export function Car({ speed }: { speed: number }) {
 
       <div
         className={clsx(
-          "relative h-[64px] w-[64px] rounded-full border-8 border-black overflow-hidden animate-wheel-spin transform rotate-90",
+          "relative h-[64px] w-[64px] rounded-full border-[12px] border-black overflow-hidden animate-wheel-spin transform rotate-90",
         )}
         style={{
           animationPlayState: speed > 0 ? "running" : "paused",
@@ -31,7 +31,7 @@ export function Car({ speed }: { speed: number }) {
 
       <div
         className={clsx(
-          "relative h-[64px] w-[64px] rounded-full border-8 border-black overflow-hidden animate-wheel-spin animation-p",
+          "relative h-[64px] w-[64px] rounded-full border-[12px] border-black overflow-hidden animate-wheel-spin animation-p",
         )}
         style={{
           animationPlayState: speed > 0 ? "running" : "paused",
