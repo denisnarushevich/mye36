@@ -10,6 +10,7 @@ export type PlayerState = {
   odoKm: number;
   fuelLiters: number;
   cash: number;
+  loan: number;
   look: number;
   location?: string;
   tasks: Task[];
@@ -21,6 +22,7 @@ export const playerStore = createStore<PlayerState>()(
     location: "majas",
     fuelLiters: 5,
     look: 0,
+    loan: 0,
     odoKm: 372943,
     cash: 100,
     tasks: [],

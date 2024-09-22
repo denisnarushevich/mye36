@@ -10,6 +10,7 @@ import { worldMap } from "@/app/worldMap";
 import { Button } from "@/app/ui/Button";
 import BaseLayout from "@/app/ui/BaseLayout";
 import { Car } from "@/app/Car";
+import { restore } from "@/app/restore";
 
 export default function Game() {
   const { timeSeconds } = useWorldStore(({ timeSeconds }) => ({
@@ -109,13 +110,11 @@ export default function Game() {
               <Button
                 key="nofuel"
                 onClick={() => {
-                  playerStore.setState((state) => {
-                    state.location = "dus";
-                  });
+                  restore();
                 }}
               >
                 <div>
-                  <div>Stumt Uz: DUS</div>
+                  <div>Zvanit Sencim</div>
                 </div>
               </Button>
             )}
@@ -124,6 +123,7 @@ export default function Game() {
               onClick={() => {
                 playerStore.setState((state) => {
                   state.cash += 50;
+                  state.loan += 50;
                 });
               }}
             >
