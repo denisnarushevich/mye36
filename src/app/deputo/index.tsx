@@ -2,6 +2,7 @@ import { DirectedEdge, DirectedVertex } from "data-structure-typed";
 import { PluginArgs } from "@/app/plugin";
 import { aplisLocationKey } from "@/app/aplis";
 import { krustojumsLocationKey } from "@/app/krustojums";
+import { WashButton } from "@/app/deputo/WashButton";
 
 export const deputoLocationKey = "deputo";
 
@@ -31,4 +32,8 @@ export default function deputoLocation({ map, locationActions }: PluginArgs) {
       distance: 7,
     }),
   );
+
+  locationActions[deputoLocationKey] = ({ playerState }) => {
+    return <WashButton />;
+  };
 }

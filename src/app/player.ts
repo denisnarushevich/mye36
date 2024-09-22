@@ -4,14 +4,13 @@ import { FUEL_TANK_CAPACITY_LITERS } from "@/app/const";
 import { Task } from "@/app/gameState";
 import { useStore } from "zustand";
 
-
-
 export type Location = string;
 
 export type PlayerState = {
   odoKm: number;
   fuelLiters: number;
   cash: number;
+  look: number;
   location?: string;
   tasks: Task[];
   addFuel(liters: number): void;
@@ -21,6 +20,7 @@ export const playerStore = createStore<PlayerState>()(
   immer((set, getState) => ({
     location: "majas",
     fuelLiters: 5,
+    look: 0,
     odoKm: 372943,
     cash: 100,
     tasks: [],

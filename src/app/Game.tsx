@@ -48,6 +48,13 @@ export default function Game() {
           </div>
           <div className="flex space-x-4 justify-center">
             <div
+              className={playerState.cash <= 0 ? "text-red-500" : "text-white"}
+            >
+              Look: {playerState.look}
+            </div>
+          </div>
+          <div className="flex space-x-4 justify-center">
+            <div
               className={clsx({
                 "text-red-500": playerState.fuelLiters <= 0,
                 "text-orange-500":
