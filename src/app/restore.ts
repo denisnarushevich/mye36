@@ -1,4 +1,4 @@
-import { isTickEvent, Task, worldStore } from "@/app/gameState";
+import { isTickEvent, Task } from "@/app/gameState";
 import { playerStore } from "@/app/player";
 import { scheduleTask } from "@/app/tasks";
 import { events } from "@/app/events";
@@ -12,7 +12,7 @@ type RestoreTask = Task & {
 export function restore() {
   scheduleTask({
     name: "restore",
-    startedAt: worldStore.getState().timeSeconds,
+    startedAt: Date.now(),
   });
 }
 
@@ -24,7 +24,7 @@ events.addEventListener("tick", (e) => {
   if (isTickEvent(e)) {
     const tasks = playerStore.getState().tasks.filter(isRestoreTask);
     tasks.forEach(({ ...task }, index) => {
-      if (worldStore.getState().timeSeconds - task.startedAt > RESTORE_TIME) {
+      if (Date.now() - task.startedAt > RESTORE_TIME) {
         playerStore.setState((state) => {
           state.location = "majas";
           state.fuelLiters = 5;

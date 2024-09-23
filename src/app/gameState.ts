@@ -8,7 +8,7 @@ import Noise from "noise-ts";
 const noise = new Noise(Math.random());
 
 export type WorldState = {
-  timeSeconds: number;
+  startedAtMs?: number;
   fuelPricePerLiter: number;
   tick(dtime: number): void;
 };
@@ -20,35 +20,32 @@ export type Task = {
 
 export const worldStore = createStore<WorldState>()(
   immer((set, getState) => ({
-    timeSeconds: 0,
+    startedAtMs: undefined,
     fuelPricePerLiter: 1.78,
 
-    tick(deltaTimeMs) {
-      const state = getState();
-      const newTimeSeconds =
-        state.timeSeconds + (deltaTimeMs / 1000) * TIME_RATE;
+    tick() {
+      const time = getTimeMs();
 
-      const day = Math.floor(newTimeSeconds / SECONDS_IN_DAY);
+      const day = Math.floor(time / SECONDS_IN_DAY / 1000);
       const daily0to1 = (noise.simplex2(1, 1 + day / 100) + 1) / 2;
 
       set((state) => {
-        state.timeSeconds = newTimeSeconds;
         state.fuelPricePerLiter = 1 + 2 * daily0to1;
       });
     },
   })),
 );
 
-export function getTime() {
-  const { timeSeconds } = worldStore.getState();
-  return timeSeconds;
+export function getTimeMs() {
+  const { startedAtMs } = worldStore.getState();
+  return startedAtMs !== undefined ? (Date.now() - startedAtMs) * TIME_RATE : 0;
 }
 
 let timer: number = -1;
 
 export function isTickEvent(event: Event): event is CustomEvent<{
-  timeSeconds: number;
   deltaTimeMs: number;
+  deltaGameTimeMs: number;
 }> {
   return event.type === "tick";
 }
@@ -57,6 +54,11 @@ export function start() {
   stop();
 
   let time0 = Date.now();
+
+  worldStore.setState({
+    startedAtMs: time0,
+  });
+
   (function fn(ms = TICK_MS) {
     timer = setTimeout(() => {
       const now = Date.now();
@@ -72,7 +74,7 @@ export function start() {
         new CustomEvent("tick", {
           detail: {
             deltaTimeMs,
-            timeSeconds: worldStore.getState().timeSeconds,
+            deltaGameTimeMs: deltaTimeMs * TIME_RATE,
           },
         }),
       );

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import numeral from "numeral";
 import clsx from "clsx";
-import { start, useWorldStore } from "@/app/gameState";
+import { getTimeMs, start } from "@/app/gameState";
 import { FUEL_TANK_CAPACITY_LITERS, SECONDS_IN_DAY } from "@/app/const";
 import { isTravelTask, travel } from "@/app/travel";
 import { playerStore, usePlayerStore } from "@/app/player";
@@ -13,9 +13,7 @@ import { Car } from "@/app/Car";
 import { restore } from "@/app/restore";
 
 export default function Game() {
-  const { timeSeconds } = useWorldStore(({ timeSeconds }) => ({
-    timeSeconds,
-  }));
+  const timeSeconds = getTimeMs();
 
   const playerState = usePlayerStore((state) => state);
 
@@ -34,11 +32,10 @@ export default function Game() {
       header={<div className="h-16 px-4 flex items-center">My E36</div>}
       overlay={
         <div className="h-full flex flex-col justify-end p-4 items-stretch space-y-4">
-          {/*<div className="flex space-x-4 justify-center">*/}
-          {/*  <div>{numeral(timeSeconds).format(`0`)}</div>*/}
-          {/*</div>*/}
           <div className="flex space-x-4 justify-center">
-            <div>{numeral(timeSeconds / SECONDS_IN_DAY).format(`0`)} DAY</div>
+            <div>
+              {numeral(timeSeconds / 1000 / SECONDS_IN_DAY).format(`0`)} DAY
+            </div>
           </div>
           <div className="flex space-x-4 justify-center">
             <div
@@ -46,6 +43,38 @@ export default function Game() {
             >
               € {numeral(playerState.cash).format(`0.00`)}
             </div>
+          </div>
+          <div className="flex space-x-4 justify-center">
+            <Button
+              key="smscredit"
+              onClick={() => {
+                playerStore.setState((state) => {
+                  state.cash += 100;
+                  state.loan += 100;
+                });
+              }}
+            >
+              <div>
+                <div>MMS Credit</div>
+                <div>+100</div>
+              </div>
+            </Button>
+            <Button
+              key="smscredit-repay"
+              onClick={() => {
+                playerStore.setState((state) => {
+                  if (state.loan >= 10 && state.cash >= 10) {
+                    state.cash -= 10;
+                    state.loan -= 10;
+                  }
+                });
+              }}
+            >
+              <div>
+                <div>MMS Credit</div>
+                <div>-10</div>
+              </div>
+            </Button>
           </div>
           <div className="flex space-x-4 justify-center">
             <div
@@ -118,20 +147,6 @@ export default function Game() {
                 </div>
               </Button>
             )}
-            <Button
-              key="smscredit"
-              onClick={() => {
-                playerStore.setState((state) => {
-                  state.cash += 50;
-                  state.loan += 50;
-                });
-              }}
-            >
-              <div>
-                <div>MMS Credit</div>
-                <div>+100</div>
-              </div>
-            </Button>
           </div>
         </div>
       }
